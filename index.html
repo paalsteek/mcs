@@ -1,0 +1,168 @@
+<html>
+<head>
+<script type="text/javascript" src="utils.js"></script>
+<script type="text/javascript" src="block.js"></script>
+<script type="text/javascript" src="segment.js"></script>
+<script type="text/javascript" src="car.js"></script>
+<script type="text/javascript">
+M = 20;
+n = 200;
+run = false;
+
+var m = new Array(1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3);
+console.log("m: " + m);
+m.unify();
+console.log("unified: " + m);
+console.log("contains 5: " + m.contains(5));
+m.insert(5);
+console.log("with 5: " + m);
+
+function highlightBlock(block, canvas, strokeStyle) {
+	//console.log('h: ' + block.topSegment());
+	Segments[block.topSegment()].drawSegment(canvas, strokeStyle);
+	//console.log('h: ' + block.leftSegment());
+	Segments[block.leftSegment()].drawSegment(canvas, strokeStyle);
+	//console.log('h: ' + block.bottomSegment());
+	Segments[block.bottomSegment()].drawSegment(canvas, strokeStyle);
+	//console.log('h: ' + block.rightSegment());
+	Segments[block.rightSegment()].drawSegment(canvas, strokeStyle);
+}
+
+function init(){
+var canvas = document.getElementById('widget');
+Segments = new Array(2*Math.pow(M,2));
+for (i = 0; i < Segments.length; i++)
+{
+	Segments[i] = new Segment(M, i);
+}
+drawGrid(canvas);
+
+Blocks = new Array(Math.pow(M,2));
+for (i=0; i < Blocks.length; i++)
+{
+	Blocks[i] = new Block(i, M);
+}
+x = Blocks[110];
+console.log(x);
+var t1 = x.tier(1, Blocks);
+for ( i = 0; i < t1.segments.length; i++ )
+{
+	Segments[t1.segments[i]].drawSegment(canvas, "blue");
+}
+var t2 = x.tier(2, Blocks);
+for ( i = 0; i < t2.segments.length; i++ )
+{
+	Segments[t2.segments[i]].drawSegment(canvas, "red");
+}
+var t3 = x.tier(3, Blocks);
+for ( i = 0; i < t3.segments.length; i++ )
+{
+	Segments[t3.segments[i]].drawSegment(canvas, "green");
+}
+var t4 = x.tier(4, Blocks);
+for ( i = 0; i < t4.segments.length; i++ )
+{
+	Segments[t4.segments[i]].drawSegment(canvas, "purple");
+}
+var t5 = x.tier(5, Blocks);
+for ( i = 0; i < t5.segments.length; i++ )
+{
+	Segments[t5.segments[i]].drawSegment(canvas, "yellow");
+}
+var t6 = x.tier(6, Blocks);
+for ( i = 0; i < t6.segments.length; i++ )
+{
+	Segments[t6.segments[i]].drawSegment(canvas, "cyan");
+}
+/*highlightBlock(x, canvas, "rgba(0, 0, 0, 0.3)");
+console.log(x.upperLeft());
+highlightBlock(Blocks[x.upperLeft()], canvas, "rgba(0, 0, 0, 0.3)");
+console.log(x.up());
+highlightBlock(Blocks[x.up()], canvas, "rgba(0, 0, 0, 0.3)");
+console.log(x.upperRight());
+highlightBlock(Blocks[x.upperRight()], canvas, "rgba(0, 0, 0, 0.3)");
+console.log(x.left());
+highlightBlock(Blocks[x.left()], canvas, "rgba(0, 0, 0, 0.3)");
+console.log(x.right());
+highlightBlock(Blocks[x.right()], canvas, "rgba(0, 0, 0, 0.3)");
+console.log(x.lowerLeft());
+highlightBlock(Blocks[x.lowerLeft()], canvas, "rgba(0, 0, 0, 0.3)");
+console.log(x.low());
+highlightBlock(Blocks[x.low()], canvas, "rgba(0, 0, 0, 0.3)");
+console.log(x.lowerRight());
+highlightBlock(Blocks[x.lowerRight()], canvas, "rgba(0, 0, 0, 0.3)");*/
+
+Vehicles = new Array(n);
+for (i = 0; i < n; i++)
+{
+	Vehicles[i] = new Car(M);
+	s = Segments[Vehicles[i].getSegment()];
+	s.drawCar(canvas);
+}
+//animate();
+};
+
+function drawGrid(canvas) {
+	for (i = 0; i < Segments.length; i++)
+		Segments[i].drawSegment(canvas);
+}
+
+function animate() {
+	canvas = document.getElementById('widget');
+	clearCanvas();
+	drawGrid(canvas);
+	for (i=0; i < Vehicles.length; i++)
+	{
+		Vehicles[i].move();
+		s = Segments[Vehicles[i].getSegment()];
+		if ( !s )
+			console.log(i + ": " + Vehicles[i].getSegment());
+		s.drawCar(canvas, i==0 ? "red" : null);
+	}
+	if ( run )
+		window.setTimeout(function() { animate() }, 1000);
+}
+
+function clearCanvas() {
+	var canvas = document.getElementById('widget');
+	if (canvas.getContext)
+	{
+		var ctx = canvas.getContext('2d');
+
+		oldStyle = ctx.fillStyle;
+		ctx.fillStyle = "rgba(255, 255, 255, 255)";
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+		ctx.fillStyle = oldStyle;
+	}
+
+};
+
+function noop() {
+}
+
+function start() {
+	if (!run)
+	{
+		run = true;
+		animate();
+	}
+}
+
+function stop() {
+	if (run)
+		run = false;
+}
+</script>
+</head>
+<body onload="init();">
+<form method="get" action="javascript: noop();" >
+<div>
+<canvas id="widget" width="500px" height="500px" style="border: 1px solid black;">Canvas not supported!</canvas>
+</div>
+<div>
+<button onclick="start();">run</button>
+<button onclick="stop();">stop</button>
+</div>
+</form>
+</body>
+</html>
