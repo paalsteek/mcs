@@ -118,13 +118,11 @@ Block.prototype.tier = function(n, blocks) {
 		return res;
 	} else {
 		var t = this.tier(n-1, blocks);
-		console.log("t: " + t.segments + "; " + t.blocks + "; " + t.seen);
 		var b = {
 			segments: new Array(),
 			blocks: new Array(),
 			seen: t.seen
 		};
-		console.log("t.blocks: " + t.blocks);
 		for ( var i = 0; i < t.blocks.length; i++ )
 		{
 			var block = blocks[t.blocks[i]];
@@ -134,8 +132,6 @@ Block.prototype.tier = function(n, blocks) {
 				var nBlock = blocks[a[j]];
 				if ( !b.seen.contains(a[j]) )
 				{
-					//console.log("adding " + a[j]);
-					//" +  to " + b.blocks + " with " + b.seen + " seen."
 					b.blocks.push(a[j]);
 					b.seen.insert(a[j]);
 					var s = new Array(nBlock.topSegment(), nBlock.rightSegment(), nBlock.bottomSegment(), nBlock.leftSegment());
