@@ -1,6 +1,16 @@
-Car = function(nRoads) {
-	this.home = Math.floor( Math.random() * (2*Math.pow(nRoads,2) - 0.5) );
-	this.segment = this.home;
+A = 10; //number of tiers (<= floor(M/2))
+gamma = 1.5 // > 0
+
+Car = function(home, nRoads) {
+	this.home = home;
+	var r = Math.random();
+	this.tier = 0;
+	while ( (r > 0 || this.tier == 0) && this.tier < A )
+	{
+		this.tier++;
+		r -= (16*this.tier - 12)*pi_alpha(this.tier);
+	}
+	this.segment = Math.floor(Math.random()*(16*this.tier-12)); //entspricht den werten zwischen 0 und 16*alpha - 13, also 16*alpha - 12 werten
 	this.M = nRoads;
 }
 
@@ -73,4 +83,17 @@ Car.prototype.move = function(direction) {
 		this.segment = this.segment - 2*Math.pow(this.M,2);
 	else if ( this.segment < 0 )
 		this.segment = this.segment + 2*Math.pow(this.M,2);
+}
+
+pi_1 = function() {
+	var res = 0;
+	for ( var i = 1; i <= A; i++ )
+	{
+		res += (16*i - 12)*Math.pow(i, -gamma);
+	}
+	return 1/res;
+}
+
+pi_alpha = function(alpha) {
+	return Math.pow(alpha, gamma * -1)*pi_1();
 }

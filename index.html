@@ -32,11 +32,21 @@ for (i=0; i < Blocks.length; i++)
 }
 
 Vehicles = new Array(n);
-for (i = 0; i < n; i++)
+for (i = 0; i < n; i+=2)
 {
-	Vehicles[i] = new Car(M);
-	s = Segments[Vehicles[i].getSegment()];
-	s.drawCar(canvas);
+	var home = Math.floor(Math.random()*(Math.pow(M,2)));
+	var c1 = new Car(home, M);
+	if ( c1.tier < 10 ) console.log(c1.tier);
+	Vehicles[i] = c1;
+	var b1 = Blocks[c1.home];
+	var s1 = Segments[b1.tier(c1.tier, Blocks).segments[c1.segment]];
+	s1.drawCar(canvas);
+	var c2 = new Car(home, M);
+	if ( c2.tier < 10 ) console.log(c2.tier);
+	Vehicles[i+1] = c2;
+	var b2 = Blocks[c2.home];
+	var s2 = Segments[b2.tier(c2.tier, Blocks).segments[c2.segment]];
+	s2.drawCar(canvas);
 }
 //animate();
 };
