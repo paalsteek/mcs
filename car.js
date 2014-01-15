@@ -1,6 +1,3 @@
-A = 10; //number of tiers (<= floor(M/2))
-gamma = 1.5 // > 0
-
 Car = function(home, nRoads) {
 	this.home = home;
 	var r = Math.random();

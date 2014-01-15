@@ -1,75 +1,73 @@
 <html>
 <head>
-<script type="text/javascript" src="utils.js"></script>
-<script type="text/javascript" src="block.js"></script>
-<script type="text/javascript" src="segment.js"></script>
-<script type="text/javascript" src="car.js"></script>
 <script type="text/javascript">
-M = 20;
-n = 2000;
-run = false;
+var worker;
 
-function highlightBlock(block, canvas, strokeStyle) {
-	Segments[block.topSegment()].drawSegment(canvas, strokeStyle);
-	Segments[block.leftSegment()].drawSegment(canvas, strokeStyle);
-	Segments[block.bottomSegment()].drawSegment(canvas, strokeStyle);
-	Segments[block.rightSegment()].drawSegment(canvas, strokeStyle);
-}
+function init() {
+	if ( worker == undefined ) {
+		console.log('creating a new worker');
+		worker = new Worker("animation.js");
 
-function init(){
-var canvas = document.getElementById('widget');
-Segments = new Array(2*Math.pow(M,2));
-for (i = 0; i < Segments.length; i++)
-{
-	Segments[i] = new Segment(M, i);
-}
-drawGrid(canvas);
-
-Blocks = new Array(Math.pow(M,2));
-for (i=0; i < Blocks.length; i++)
-{
-	Blocks[i] = new Block(i, M);
-}
-
-Vehicles = new Array(n);
-for (i = 0; i < n; i+=2)
-{
-	var home = Math.floor(Math.random()*(Math.pow(M,2)));
-	var c1 = new Car(home, M);
-	if ( c1.tier < 10 ) console.log(c1.tier);
-	Vehicles[i] = c1;
-	var b1 = Blocks[c1.home];
-	var s1 = Segments[b1.tier(c1.tier, Blocks).segments[c1.segment]];
-	s1.drawCar(canvas);
-	var c2 = new Car(home, M);
-	if ( c2.tier < 10 ) console.log(c2.tier);
-	Vehicles[i+1] = c2;
-	var b2 = Blocks[c2.home];
-	var s2 = Segments[b2.tier(c2.tier, Blocks).segments[c2.segment]];
-	s2.drawCar(canvas);
-}
-//animate();
-};
-
-function drawGrid(canvas) {
-	for (i = 0; i < Segments.length; i++)
-		Segments[i].drawSegment(canvas);
-}
-
-function animate() {
-	canvas = document.getElementById('widget');
-	clearCanvas();
-	drawGrid(canvas);
-	for (i=0; i < Vehicles.length; i++)
-	{
-		Vehicles[i].move();
-		s = Segments[Vehicles[i].getSegment()];
-		if ( !s )
-			console.log(i + ": " + Vehicles[i].getSegment());
-		s.drawCar(canvas, i==0 ? "red" : null);
+		worker.addEventListener('message', function(e) {
+			var data = e.data;
+			switch(data.cmd) {
+				case 'log':
+					console.log(data.msg);
+					break;
+				case 'drawArc':
+					{
+						var canvas = document.getElementById('widget');
+						var ctx = canvas.getContext('2d');
+						var oldStyle = ctx.strokeStyle;
+						ctx.strokeStyle = data.stroke;
+						ctx.beginPath();
+						ctx.arc(data.x, data.y, data.radius, data.startAngle, data.endAngle, data.anticlockwise);
+						ctx.stroke();
+						ctx.strokeStyle = oldStyle;
+					}
+					break;
+				case 'drawLine':
+					{
+						var canvas = document.getElementById('widget');
+						var ctx = canvas.getContext('2d');
+						var oldStyle = ctx.strokeStyle;
+						ctx.strokeStyle = data.stroke;
+						ctx.beginPath();
+						ctx.moveTo(data.startx, data.starty);
+						ctx.lineTo(data.stopx, data.stopy);
+						ctx.stroke();
+						ctx.strokeStyle = oldStyle;
+					}
+					break;
+				case 'clearCanvas':
+					clearCanvas();
+					break;
+			}
+		});
 	}
-	if ( run )
-		window.setTimeout(function() { animate() }, 1000);
+
+	var canvas = document.getElementById('widget');
+	worker.postMessage({'cmd': 'setDimensions', 'w': canvas.width, 'h': canvas.height});
+	worker.postMessage({'cmd': 'setM', 'value': document.getElementById('M').value});
+	worker.postMessage({'cmd': 'setn', 'value': document.getElementById('n').value});
+	worker.postMessage({'cmd': 'setA', 'value': document.getElementById('A').value});
+	worker.postMessage({'cmd': 'init'});
+}
+
+function start() {
+	worker.postMessage({'cmd': 'start'});
+}
+
+function stop() {
+	worker.postMessage({'cmd': 'stop'});
+}
+
+function resetWidget() {
+	worker.terminate();
+	delete worker;
+	worker = undefined;
+	clearCanvas();
+	init();
 }
 
 function clearCanvas() {
@@ -83,23 +81,35 @@ function clearCanvas() {
 		ctx.fillRect(0, 0, canvas.width, canvas.height);
 		ctx.fillStyle = oldStyle;
 	}
+}
 
-};
+function setM(value) {
+	if ( typeof(value) !== 'number' )
+		value = parseInt(value);
+
+	worker.postMessage({'cmd': 'setM', 'value': value});
+
+	if ( parseInt(document.getElementById('A').value) > Math.floor(value/2))
+		setA(Math.floor(value/2));
+	document.getElementById('A').setAttribute('max', Math.floor(value/2));
+
+	document.getElementById('M').value = value;
+	document.getElementById('Mtext').value = value;
+}
+
+function setN(value) {
+	worker.postMessage({'cmd': 'setN', 'value': value});
+	document.getElementById('n').value = value;
+	document.getElementById('Ntext').value = value;
+}
+
+function setA(value) {
+	worker.postMessage({'cmd': 'setA', 'value': value});
+	document.getElementById('A').value = value;
+	document.getElementById('Atext').value = value;
+}
 
 function noop() {
-}
-
-function start() {
-	if (!run)
-	{
-		run = true;
-		animate();
-	}
-}
-
-function stop() {
-	if (run)
-		run = false;
 }
 </script>
 </head>
@@ -111,7 +121,44 @@ function stop() {
 <div>
 <button onclick="start();">run</button>
 <button onclick="stop();">stop</button>
+<button onclick="resetWidget();">reset</button>
 </div>
+<div>
+<table>
+<tr>
+<td>
+<label label-for="M">M:</label>
+</td>
+<td>
+<input id="M" type="range" min="5" max="25" value="20" onchange="setM(this.value)" />
+</td>
+<td>
+<input id="Mtext" type="text" value="20" size="5" onchange="setM(this.value)" />
+</td>
+</tr>
+<tr>
+<td>
+<label label-for="n">n:</label>
+</td>
+<td>
+<input id="n" type="range" min="100" max="10000" value="1000" step="10" onchange="setN(this.value)" />
+</td>
+<td>
+<input id="Ntext" type="text" value="1000" size="5" onchange="setN(this.value)" />
+</td>
+</tr>
+<tr>
+<td>
+<label label-for="A">A:</label>
+</td>
+<td>
+<input id="A" type="range" min="1" max="10" value="10" onchange="setA(this.value)" />
+</td>
+<td>
+<input id="Atext" type="text" value="10" size="5" onchange="setA(this.value)" />
+</td>
+</tr>
+</table>
 </form>
 </body>
 </html>
