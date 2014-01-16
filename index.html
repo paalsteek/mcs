@@ -49,7 +49,7 @@ function init() {
 	var canvas = document.getElementById('widget');
 	worker.postMessage({'cmd': 'setDimensions', 'w': canvas.width, 'h': canvas.height});
 	worker.postMessage({'cmd': 'setM', 'value': document.getElementById('M').value});
-	worker.postMessage({'cmd': 'setn', 'value': document.getElementById('n').value});
+	worker.postMessage({'cmd': 'setN', 'value': document.getElementById('n').value});
 	worker.postMessage({'cmd': 'setA', 'value': document.getElementById('A').value});
 	worker.postMessage({'cmd': 'init'});
 }
