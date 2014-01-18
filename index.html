@@ -2,23 +2,26 @@
 <head>
 <script type="text/javascript">
 var worker;
+var canvas;
+var ctx;
+var buffer = 0;
 
 function init() {
+	canvas = document.getElementById('widget0');
+	ctx = canvas.getContext('2d');
 	if ( worker == undefined ) {
 		console.log('creating a new worker');
 		worker = new Worker("animation.js");
 
 		worker.addEventListener('message', function(e) {
 			var data = e.data;
+			var oldStyle = ctx.strokeStyle;
 			switch(data.cmd) {
 				case 'log':
 					console.log(data.msg);
 					break;
 				case 'drawArc':
 					{
-						var canvas = document.getElementById('widget');
-						var ctx = canvas.getContext('2d');
-						var oldStyle = ctx.strokeStyle;
 						ctx.strokeStyle = data.stroke;
 						ctx.beginPath();
 						ctx.arc(data.x, data.y, data.radius, data.startAngle, data.endAngle, data.anticlockwise);
@@ -28,9 +31,6 @@ function init() {
 					break;
 				case 'drawLine':
 					{
-						var canvas = document.getElementById('widget');
-						var ctx = canvas.getContext('2d');
-						var oldStyle = ctx.strokeStyle;
 						ctx.strokeStyle = data.stroke;
 						ctx.beginPath();
 						ctx.moveTo(data.startx, data.starty);
@@ -40,13 +40,18 @@ function init() {
 					}
 					break;
 				case 'clearCanvas':
+					var oldCanvas = canvas;
+					canvas = document.getElementById('widget'+buffer);
+					ctx = canvas.getContext('2d');
+					canvas.style.display = "none";
+					oldCanvas.style.display = "block";
 					clearCanvas();
+					buffer ? buffer = 0 : buffer = 1;
 					break;
 			}
 		});
 	}
 
-	var canvas = document.getElementById('widget');
 	worker.postMessage({'cmd': 'setDimensions', 'w': canvas.width, 'h': canvas.height});
 	worker.postMessage({'cmd': 'setM', 'value': document.getElementById('M').value});
 	worker.postMessage({'cmd': 'setN', 'value': document.getElementById('n').value});
@@ -71,16 +76,10 @@ function resetWidget() {
 }
 
 function clearCanvas() {
-	var canvas = document.getElementById('widget');
-	if (canvas.getContext)
-	{
-		var ctx = canvas.getContext('2d');
-
-		oldStyle = ctx.fillStyle;
-		ctx.fillStyle = "rgba(255, 255, 255, 255)";
-		ctx.fillRect(0, 0, canvas.width, canvas.height);
-		ctx.fillStyle = oldStyle;
-	}
+	oldStyle = ctx.fillStyle;
+	ctx.fillStyle = "rgba(255, 255, 255, 255)";
+	ctx.fillRect(0, 0, canvas.width, canvas.height);
+	ctx.fillStyle = oldStyle;
 }
 
 function setM(value) {
@@ -116,7 +115,8 @@ function noop() {
 <body onload="init();">
 <form method="get" action="javascript: noop();" >
 <div>
-<canvas id="widget" width="500px" height="500px" style="border: 1px solid black;">Canvas not supported!</canvas>
+<canvas id="widget0" width="500px" height="500px" style="border: 1px solid black;">Canvas not supported!</canvas>
+<canvas id="widget1" width="500px" height="500px" style="border: 1px solid black; display: none;">Canvas not supported!</canvas>
 </div>
 <div>
 <button onclick="start();">run</button>

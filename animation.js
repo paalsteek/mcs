@@ -138,8 +138,9 @@ function calculateCommunication() {
 	for (var i = 0; i < Vehicles.length; i++ )
 	{
 		if ( Vehicles[i].backoff > 0 ) {
-		(Vehicles[i].backoff)--;
+			(Vehicles[i].backoff)--;
 		}
+		Vehicles[i].state = 0;
 	}
 
 	log("p_ac: " + p_ac);
