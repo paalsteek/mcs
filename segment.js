@@ -1,9 +1,13 @@
 Segment = function(nRoads, segNumber) {
+	if ( !assertNumber(nRoads, "Segment") || !assertNumber(segNumber, "Segment") )
+		return;
+
 	this.x = Math.floor(segNumber / 2) % nRoads;
 	this.y = Math.floor((segNumber / 2) / nRoads);
 	this.orientation = segNumber % 2;
 	this.M = nRoads;
 	this.startx = 0;
+	this.cars = new Array();
 }
 
 Segment.prototype.getX = function() {
@@ -65,12 +69,27 @@ Segment.prototype.drawSegment = function(strokeStyle) {
 	}
 }
 
-Segment.prototype.drawCar = function(strokeStyle) {
+Segment.prototype.drawCar = function(vehicles, car, strokeStyle) {
+	if ( !assertNumber(car, 'drawCar') )
+		return;
+
 	this.calcPos();
-	pos = Math.floor(Math.random() * ((this.stopx - this.startx) + (this.stopy - this.starty)));
+	pos = Math.floor(vehicles[car].offset * ((this.stopx - this.startx) + (this.stopy - this.starty)));
 
 	if ( !strokeStyle )
-		strokeStyle = "rgba(0, 0, 255, 1)";
+	{
+		switch ( vehicles[car].state ) {
+			case 0:
+				strokeStyle = "rgba(0, 0, 255, 1)";
+				break;
+			case 1:
+				strokeStyle = "rgba(0, 255, 0, 1)";
+				break;
+			case 2:
+				strokeStyle = "yellow";
+				break;
+		}
+	}
 
 	var startx = this.startx;
 	var starty = this.starty;
@@ -90,4 +109,11 @@ Segment.prototype.drawCar = function(strokeStyle) {
 	if ( (this.x == 0) || (this.y == 0) ) {
 		self.postMessage({'cmd': 'drawArc', 'x': startx2, 'y': starty2, 'radius': 2, 'startAngle': 0, 'endAngle': Math.PI*2, 'anticlockwise': true, 'stroke': strokeStyle});
 	}
+}
+
+Segment.prototype.addCar = function(n) {
+	if ( !assertNumber(n, "addCar") )
+		return;
+
+	this.cars.insert(n);
 }

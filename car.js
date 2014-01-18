@@ -1,21 +1,43 @@
-Car = function(home, nRoads) {
+/*
+ * Vehicle stats
+ * 0: sleeping
+ * 1: transmitting
+ * 2: receiving
+ */
+
+Car = function(n, home, nRoads, blocks, segments) {
+	if ( !assertNumber(n, 'car') || !assertNumber(home, 'car') || !assertNumber(nRoads, 'car') )
+		return;
+
+	this.n = n;
 	this.home = home;
 	var r = Math.random();
-	this.tier = 0;
-	while ( (r > 0 || this.tier == 0) && this.tier < A )
-	{
-		this.tier++;
-		r -= (16*this.tier - 12)*pi_alpha(this.tier);
-	}
-	this.segment = Math.floor(Math.random()*(16*this.tier-12)); //entspricht den werten zwischen 0 und 16*alpha - 13, also 16*alpha - 12 werten
+	this.calculatePosition(blocks);
 	this.M = nRoads;
+	this.backoff = Math.floor(Math.random()*2*(1/eta)) + 1; // draw initial random backoff
+	this.offset = Math.random(); //offset of the position within a segment
+	this.state = 0;
 }
 
 Car.prototype.getSegment = function() {
 	return this.segment;
 }
 
+Car.prototype.calculatePosition = function(blocks) {
+	this.tier = 0;
+	while ( (r > 0 || this.tier == 0) && this.tier < A )
+	{
+		this.tier++;
+		r -= (16*this.tier - 12)*pi_alpha(this.tier);
+	}
+	var pos = Math.floor(Math.random()*(16*this.tier-12)); //entspricht den werten zwischen 0 und 16*alpha - 13, also 16*alpha - 12 werten
+	this.segment = blocks[this.home].tier(this.tier, blocks).segments[pos];
+}
+
 Car.prototype.move = function(direction) {
+	if ( !assertNumber(direction, 'move') )
+		return;
+
 	if ( direction === undefined )
 		direction = Math.floor( Math.random() * 6 );
 
@@ -92,5 +114,8 @@ pi_1 = function() {
 }
 
 pi_alpha = function(alpha) {
+	if ( !assertNumber(alpha, "pi_alpha") )
+		return;
+
 	return Math.pow(alpha, gamma * -1)*pi_1();
 }

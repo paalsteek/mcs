@@ -1,6 +1,10 @@
 Block = function(n, nRoads) {
+	if ( !assertNumber(n, "Block") || !assertNumber(nRoads, "Block") )
+		return;
+
 	this.n = n;
 	this.M = nRoads;
+	this.tiers = new Array(A);
 }
 
 Block.prototype.topSegment = function() {
@@ -102,7 +106,13 @@ Block.prototype.lowerRight = function() {
 }
 
 Block.prototype.tier = function(n, blocks) {
+	if ( !assertNumber(n, "tier") )
+		return;
+
 	if ( n < 0 ) return;
+
+	if ( this.tiers[n] !== undefined )
+		return this.tiers[n];
 
 	if ( n == 1 ) {
 		var s = new Array(this.topSegment(), this.rightSegment(), this.bottomSegment(), this.leftSegment()).sort();
@@ -115,6 +125,7 @@ Block.prototype.tier = function(n, blocks) {
 			blocks: b,
 			seen: c
 		};
+		this.tiers[n] = res;
 		return res;
 	} else {
 		var t = this.tier(n-1, blocks);
@@ -143,6 +154,7 @@ Block.prototype.tier = function(n, blocks) {
 				}
 			}
 		}
+		this.tiers[n] = b;
 		return b;
 	}
 }
