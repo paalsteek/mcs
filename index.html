@@ -1,5 +1,67 @@
 <html>
 <head>
+<style type="text/css">
+	section
+	{
+		position: absolute;
+		display: block;
+		top: 1.8em;
+		left: 0;
+		padding: 10px 20px;
+		background-color: #eee;
+		border-radius: 5px;
+		box-shadow: 0 3px 3px rgba(0,0,0,0.1);
+		z-index: 0;
+	}
+
+	section:first-child
+	{
+		z-index: 1;
+	}
+
+	section:target,
+	section:target h2
+	{
+		z-index: 2;
+	}
+
+	section h2
+	{
+		position: absolute;
+		font-size: 1em;
+		font-weight: normal;
+		width: 120px;
+		height: 1.8em;
+		top: -1.8em;
+		left: 10px;
+		padding: 0;
+		margin: 0;
+		color: #999;
+		background-color: #eee;
+		border-radius: 5px 5px 0 0;
+	}
+
+	section:nth-child(2) h2
+	{
+		left: 134px;
+	}
+
+	section:nth-child(3) h2
+	{
+		left: 258px;
+	}
+
+	section h2 a
+	{
+		display: block;
+		width: 100%;
+		line-height: 1.8em;
+		text-align: center;
+		text-decoration: none;
+		color: inherit;
+		outline: 0 none;
+	}
+</style>
 <script type="text/javascript">
 var worker;
 var canvas;
@@ -7,6 +69,10 @@ var ctx;
 var buffer = 0;
 
 function init() {
+	document.getElementById('settings').style.height = document.getElementById('network').children[1].clientHeight + document.getElementById('network').children[2].clientHeight;
+	document.getElementById('settings').style.width = document.getElementById('network').children[1].clientWidth;
+	document.getElementById('analysis').style.height = document.getElementById('network').children[1].clientHeight + document.getElementById('network').children[2].clientHeight;
+	document.getElementById('analysis').style.width = document.getElementById('network').children[1].clientWidth;
 	canvas = document.getElementById('widget0');
 	ctx = canvas.getContext('2d');
 	if ( worker == undefined ) {
@@ -113,7 +179,8 @@ function noop() {
 </script>
 </head>
 <body onload="init();">
-<form method="get" action="javascript: noop();" >
+<section id="network">
+		<h2><a href="#network">Network</a></h2>
 <div>
 <canvas id="widget0" width="500px" height="500px" style="border: 1px solid black;">Canvas not supported!</canvas>
 <canvas id="widget1" width="500px" height="500px" style="border: 1px solid black; display: none;">Canvas not supported!</canvas>
@@ -121,16 +188,19 @@ function noop() {
 <div>
 <button onclick="start();">run</button>
 <button onclick="stop();">stop</button>
-<button onclick="resetWidget();">reset</button>
 </div>
+</section>
+<section id="settings">
+	<h2><a href="#settings">Settings</a></h2>
 <div>
-<table>
+<form width="100%" method="get" action="javascript: noop();" >
+<table width="100%">
 <tr>
 <td>
 <label label-for="M">M:</label>
 </td>
-<td>
-<input id="M" type="range" min="5" max="25" value="20" onchange="setM(this.value)" />
+<td width="100%">
+<input id="M" type="range" min="5" max="25" value="20" style="width: 95%" onchange="setM(this.value)" oninput="setM(this.value)" />
 </td>
 <td>
 <input id="Mtext" type="text" value="20" size="5" onchange="setM(this.value)" />
@@ -141,7 +211,7 @@ function noop() {
 <label label-for="n">n:</label>
 </td>
 <td>
-<input id="n" type="range" min="100" max="10000" value="1000" step="10" onchange="setN(this.value)" />
+<input id="n" type="range" min="100" max="10000" value="1000" step="10" style="width: 95%" onchange="setN(this.value)" oninput="setN(this.value)" />
 </td>
 <td>
 <input id="Ntext" type="text" value="1000" size="5" onchange="setN(this.value)" />
@@ -152,7 +222,7 @@ function noop() {
 <label label-for="A">A:</label>
 </td>
 <td>
-<input id="A" type="range" min="1" max="10" value="10" onchange="setA(this.value)" />
+<input id="A" type="range" min="1" max="10" value="10" style="width: 95%" onchange="setA(this.value)" oninput="setA(this.value)" />
 </td>
 <td>
 <input id="Atext" type="text" value="10" size="5" onchange="setA(this.value)" />
@@ -160,5 +230,15 @@ function noop() {
 </tr>
 </table>
 </form>
+</div>
+<div>
+<button onclick="resetWidget();">set</button>
+</div>
+</section>
+<section id="analysis">
+	<h2><a href="#analysis">Analysis</a></h2>
+<div>
+</div>
+</section>
 </body>
 </html>
