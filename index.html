@@ -25,6 +25,11 @@
 		z-index: 2;
 	}
 
+	section:target h2
+	{
+		background-color: #eee;
+	}
+
 	section h2
 	{
 		position: absolute;
@@ -37,7 +42,7 @@
 		padding: 0;
 		margin: 0;
 		color: #999;
-		background-color: #eee;
+		background-color: #ddd;
 		border-radius: 5px 5px 0 0;
 	}
 
@@ -51,6 +56,11 @@
 		left: 258px;
 	}
 
+	section:nth-child(4) h2
+	{
+		left: 382px;
+	}
+
 	section h2 a
 	{
 		display: block;
@@ -62,6 +72,7 @@
 		outline: 0 none;
 	}
 </style>
+<script type="text/javascript" src="Chart.min.js"></script>
 <script type="text/javascript">
 var worker;
 var canvas;
@@ -71,8 +82,10 @@ var buffer = 0;
 function init() {
 	document.getElementById('settings').style.height = document.getElementById('network').children[1].clientHeight + document.getElementById('network').children[2].clientHeight;
 	document.getElementById('settings').style.width = document.getElementById('network').children[1].clientWidth;
-	document.getElementById('analysis').style.height = document.getElementById('network').children[1].clientHeight + document.getElementById('network').children[2].clientHeight;
-	document.getElementById('analysis').style.width = document.getElementById('network').children[1].clientWidth;
+	document.getElementById('throughput').style.height = document.getElementById('network').children[1].clientHeight + document.getElementById('network').children[2].clientHeight;
+	document.getElementById('throughput').style.width = document.getElementById('network').children[1].clientWidth;
+	document.getElementById('delay').style.height = document.getElementById('network').children[1].clientHeight + document.getElementById('network').children[2].clientHeight;
+	document.getElementById('delay').style.width = document.getElementById('network').children[1].clientWidth;
 	canvas = document.getElementById('widget0');
 	ctx = canvas.getContext('2d');
 	if ( worker == undefined ) {
@@ -113,6 +126,45 @@ function init() {
 					oldCanvas.style.display = "block";
 					clearCanvas();
 					buffer ? buffer = 0 : buffer = 1;
+					break;
+				case 'drawChart':
+					var chart = document.getElementById('chart').getContext('2d');
+					var chartdata = {
+						'labels': Array.apply(0, Array(data.data['sd'].length)).map(function(e, i, a) { return i; }),
+						'datasets': [
+							{
+								'data': data.data['sd'],
+								'fillColor': 'rgba(255, 0, 0, 0.5)'
+							},
+							{
+								'data': data.data['sr'],
+								'fillColor': 'rgba(0, 255, 0, 0.5)'
+							},
+							{
+								'data': data.data['rd'],
+								'fillColor': 'rgba(0, 0, 255, 0.5)'
+							},
+							{
+								'data': data.data['average'],
+								'fillColor': 'rgba(0, 0, 0, 0)',
+								'strokeColor': 'rgb(0, 0, 0)',
+								'pointStrokeColor': 'rgba(0, 0, 0, 0)',
+							},
+						]
+					};
+					new Chart(chart).Line(chartdata, {'animation': false, 'pointDotRadius': 2});
+					var delaychart = document.getElementById('delaychart').getContext('2d');
+					var delaydata = {
+						'labels': Array.apply(0, Array(data.data['delays'].length)).map(function(e,i) { return i; }),
+						'datasets': [
+							{
+								'data': data.data['delays'],
+								'fillColor': 'rgba(0, 0, 0, 0)',
+								'strokeColor': 'black',
+							}
+						]
+					};
+					new Chart(delaychart).Line(delaydata, {'animation': false, 'pointDotRadius': 2});
 					break;
 			}
 		});
@@ -235,9 +287,16 @@ function noop() {
 <button onclick="resetWidget();">set</button>
 </div>
 </section>
-<section id="analysis">
-	<h2><a href="#analysis">Analysis</a></h2>
+<section id="throughput">
+	<h2><a href="#throughput">Throughput</a></h2>
 <div>
+<canvas id="chart" width="500px" height="500px" style="border: 1px solid black;">Canvas not supported!</canvas>
+</div>
+</section>
+<section id="delay">
+	<h2><a href="#delay">Delay</a></h2>
+<div>
+<canvas id="delaychart" width="500px" height="500px" style="border: 1px solid black;">Canvas not supported!</canvas>
 </div>
 </section>
 </body>

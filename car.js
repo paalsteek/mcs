@@ -17,6 +17,7 @@ Car = function(n, home, nRoads, blocks, segments) {
 	this.backoff = Math.floor(Math.random()*2*(1/eta)) + 1; // draw initial random backoff
 	this.offset = Math.random(); //offset of the position within a segment
 	this.state = 0;
+	this.buffer = new Array();
 }
 
 Car.prototype.getSegment = function() {

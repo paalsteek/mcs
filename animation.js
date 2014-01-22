@@ -17,6 +17,18 @@ canvasHeight = 0;
 p_ac = 2*Math.ceil(1+delta)*Math.ceil(2+delta);
 timeslot = 0; //counter for the communication animation (used for synchronization of time slots)
 
+sdtransmissions = 0; //source-destination
+srtransmissions = 0; //source-relay
+rdtransmissions = 0; //relay-destination
+transmissions = {
+	'sd': new Array(),
+	'sr': new Array(),
+	'rd': new Array(),
+	'average': new Array(),
+	'delays': new Array(),
+};
+delays = new Array();
+
 self.addEventListener('message', function(e) {
 	var data = e.data;
 	switch(data.cmd) {
@@ -119,6 +131,13 @@ function animate(callback) {
 	calculatePositions();
 	calculateCommunication();
 	draw();
+	transmissions['sd'].push(sdtransmissions/n);
+	transmissions['sr'].push(srtransmissions/n);
+	transmissions['rd'].push(rdtransmissions/n);
+	var average = transmissions['sd'].reduce(function(a,b) { return a+b; })/transmissions['sd'].length;
+	transmissions['average'] = Array.apply(0, Array(transmissions['sd'].length)).map(function() { return average; })
+	transmissions['delays'].push(delays.reduce(function(a,b) { return a+b; })/delays.length);
+	self.postMessage({'cmd': 'drawChart', 'data': transmissions });
 
 	if ( run )
 		setTimeout(function() { animate(callback) }, 1000);
@@ -134,16 +153,19 @@ function calculatePositions() {
 }
 
 function calculateCommunication() {
+	sdtransmissions = 0;
+	srtransmissions = 0;
+	rdtransmissions = 0;
 	var transmitters = new Array();
 	for (var i = 0; i < Vehicles.length; i++ )
 	{
-		if ( Vehicles[i].backoff > 0 ) {
-			(Vehicles[i].backoff)--;
-		}
-		Vehicles[i].state = 0;
+		var v = Vehicles[i];
+		v.backoff--;
+		for ( var j = 0; j < v.buffer.length; j++ )
+			(v.buffer[j]['backoff'])--;
+		v.state = 0;
 	}
 
-	log("p_ac: " + p_ac);
 	/* Every Segment becomes active every p_ac time slots,
 	this is implementes as every p_ac segment becomes active
 	and they are cycled every time slot */
@@ -170,7 +192,6 @@ function calculateCommunication() {
 			/* The transmission partner is in the same segment */
 			if ( target != undefined ) {
 				sdpairs.push({'source': c, 'destination': target});
-				log("S-D-Pair found: " + c + " -> " + target + ": " + sdpairs);
 			}
 		}
 
@@ -179,18 +200,19 @@ function calculateCommunication() {
 		{
 			/* Select one of the present S-D-Pairs */
 			var pair = Math.floor(Math.random()*sdpairs.length);
-			log("sdpairs[" + pair + "] = " + sdpairs[pair]);
 			var source = sdpairs[pair].source;
 			var destination = sdpairs[pair].destination;
 			/* Check whether the selected pair has a packet pending */
-			if ( Vehicles[source].backoff === 0 )
+			if ( Vehicles[source].backoff <= 0 )
 			{
+				delays.push(Vehicles[source].backoff*-1);
 				/* We transmit our packet */
 				Vehicles[source].backoff = Math.floor(Math.random()*2*(1/eta)) * 1;
 				Vehicles[source].state = 1;
 				Vehicles[destination].state = 2;
 				//s.drawCar(Vehicles, source);
 				//s.drawCar(Vehicles, destination);
+				sdtransmissions += 1;
 			}
 		} else {
 			/* Choose v_a randomly from the cars in the current segment */
@@ -202,28 +224,37 @@ function calculateCommunication() {
 
 			/* One of the chosen cars is sender the other one is receiver
 			 * Which is which is chosen randomly */
-			var source, destination;
 			if ( Math.floor(Math.random()*2) > 0 ) {
-				source = s.cars[v_a];
-				destination = s.cars[v_b];
+				/* Check whether there is data to be transmitted */
+				if ( Vehicles[v_a].backoff <= 0 ) {
+					var backoff = Vehicles[v_a].backoff;
+					/* We transmit our packet */
+					Vehicles[v_a].backoff = Math.floor(Math.random()*2*(1/eta)) * 1;
+					Vehicles[v_a].state = 1;
+					Vehicles[v_b].state = 2;
+					c = Vehicles[v_a].n;
+					if ( c % 2 === 0 ) {
+						Vehicles[v_b].buffer.insert({ 'target': c+1, 'backoff': backoff });
+					} else {
+						Vehicles[v_b].buffer.insert({ 'target': c-1, 'backoff': backoff });
+					}
+					srtransmissions += 1;
+				}
 			} else {
-				source = s.cars[v_b];
-				destination = s.cars[v_a];
-			}
-
-			if ( Vehicles[source] === undefined )
-				log("Ooops: " + v_a + ", " + v_b + ", " + source + ", " + destination)
-			/* Check whether there is data to be transmitted */
-			if ( Vehicles[source].backoff === 0 ) {
-				/* We transmit our packet */
-				Vehicles[source].backoff = Math.floor(Math.random()*2*(1/eta)) * 1;
-				Vehicles[source].state = 1;
-				Vehicles[destination].state = 2;
-				//s.drawCar(Vehicles, source);
-				//s.drawCar(Vehicles, destination);
+				for ( var i = 0; i < Vehicles[v_b].buffer.length; i++ )
+				{
+					if ( Vehicles[v_b].buffer[i]['target'] === v_a ) {
+						delays.push(Vehicles[v_b].buffer[i]['backoff']*-1);
+						Vehicles[v_b].state = 1;
+						Vehicles[v_a].state = 2;
+						Vehicles[v_b].buffer.splice(i, 1);
+						rdtransmissions += 1;
+					}
+				}
 			}
 		}
 	}
+	log('sd: ' + sdtransmissions + ', sr: ' + srtransmissions + ', rd: ' + rdtransmissions);
 }
 
 function assertNumber(n, f) {

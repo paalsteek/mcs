@@ -32,3 +32,13 @@ Array.prototype.insert = function(element) {
 	if ( !(this[i] === element) )
 		this.splice(i, 0, element);
 }
+
+Array.prototype.remove = function(element) {
+	//assume sorted list of comparable elements
+	var i = 0;
+	while ( this[i] < element )
+		i++;
+
+	if ( this[i] === element )
+		this.splice(i, 1);
+}
