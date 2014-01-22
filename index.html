@@ -206,6 +206,11 @@ function setM(value) {
 
 	worker.postMessage({'cmd': 'setM', 'value': value});
 
+	var d = document.getElementById('d').value;
+	var n = Math.floor((d/100)*(2*(value-1)*(value-1)));
+	document.getElementById('n').value = n;
+	document.getElementById('Ntext').value = n;
+
 	if ( parseInt(document.getElementById('A').value) > Math.floor(value/2))
 		setA(Math.floor(value/2));
 	document.getElementById('A').setAttribute('max', Math.floor(value/2));
@@ -214,8 +219,20 @@ function setM(value) {
 	document.getElementById('Mtext').value = value;
 }
 
+function setD(value) {
+	var m = document.getElementById('M').value;
+	var n = 2*(m-1)*(m-1)*(value/100);
+	setN(Math.floor(n));
+	document.getElementById('d').value = value;
+	document.getElementById('Dtext').value = value;
+}
+
 function setN(value) {
 	worker.postMessage({'cmd': 'setN', 'value': value});
+	var m = document.getElementById('M').value;
+	var d = Math.floor((value*100)/(2*(m-1)*(m-1)));
+	document.getElementById('d').value = d;
+	document.getElementById('Dtext').value = d;
 	document.getElementById('n').value = value;
 	document.getElementById('Ntext').value = value;
 }
@@ -260,7 +277,18 @@ function noop() {
 </tr>
 <tr>
 <td>
-<label label-for="n">n:</label>
+<label label-for="d">d:</label>
+</td>
+<td>
+<input id="d" type="range" min="100" max="500" value="138" step="10" style="width: 95%" onchange="setD(this.value)" oninput="setD(this.value)" />
+</td>
+<td>
+<input id="Dtext" type="text" value="1000" size="5" onchange="setD(this.value)" />
+</td>
+</tr>
+<tr>
+<td>
+<label label-for="n">N:</label>
 </td>
 <td>
 <input id="n" type="range" min="100" max="10000" value="1000" step="10" style="width: 95%" onchange="setN(this.value)" oninput="setN(this.value)" />
