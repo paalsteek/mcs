@@ -134,9 +134,9 @@ function animate(callback) {
 	transmissions['sd'].push(sdtransmissions/n);
 	transmissions['sr'].push(srtransmissions/n);
 	transmissions['rd'].push(rdtransmissions/n);
-	var average = transmissions['sd'].reduce(function(a,b) { return a+b; })/transmissions['sd'].length;
+	var average = transmissions['sd'].length > 0 ? transmissions['sd'].reduce(function(a,b) { return a+b; })/transmissions['sd'].length : 0;
 	transmissions['average'] = Array.apply(0, Array(transmissions['sd'].length)).map(function() { return average; })
-	transmissions['delays'].push(delays.reduce(function(a,b) { return a+b; })/delays.length);
+	transmissions['delays'].push(delays.length > 0 ? delays.reduce(function(a,b) { return a+b; })/delays.length : 0);
 	self.postMessage({'cmd': 'drawChart', 'data': transmissions });
 
 	if ( run )
